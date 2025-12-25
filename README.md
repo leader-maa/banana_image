@@ -84,5 +84,5 @@
 ---
 
 <p align="center">
-  由 Gemini & React 精心打造 ❤️
+   最好的合作伙伴 Gemini
 </p>
