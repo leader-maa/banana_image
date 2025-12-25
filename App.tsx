@@ -7,9 +7,9 @@
 import React, { useState } from 'react';
 import { InputSection } from './components/InputSection';
 import { SvgPreview } from './components/SvgPreview';
-import { generateSvg } from './services/geminiService';
+import { generateSvgViaApi } from './services/apiClient';
 import { GeneratedSvg, GenerationStatus, ApiError } from './types';
-import { AlertCircle, Box, ExternalLink } from 'lucide-react';
+import { AlertCircle, Box, ShieldCheck } from 'lucide-react';
 
 const App: React.FC = () => {
   const [status, setStatus] = useState<GenerationStatus>(GenerationStatus.IDLE);
@@ -22,7 +22,8 @@ const App: React.FC = () => {
     setCurrentSvg(null);
 
     try {
-      const svgContent = await generateSvg(prompt, modelId);
+      // 现在调用的是我们自己的后端接口，Key 不会暴露
+      const svgContent = await generateSvgViaApi(prompt, modelId);
       
       const newSvg: GeneratedSvg = {
         id: crypto.randomUUID(),
@@ -35,17 +36,25 @@ const App: React.FC = () => {
       setCurrentSvg(newSvg);
       setStatus(GenerationStatus.SUCCESS);
     } catch (err: any) {
-      console.error("Catch in App.tsx:", err);
+      console.error("Frontend Error Catch:", err);
       setStatus(GenerationStatus.ERROR);
       setError({
-        message: modelId === 'qwen-plus' ? "阿里引擎连接失败" : "引擎响应异常",
-        details: err.message || "未知错误，请检查 API Key 或网络环境。"
+        message: "后端响应异常",
+        details: err.message || "无法完成生成任务。"
       });
     }
   };
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-indigo-500/30 pt-8">      
+      {/* 安全提醒 - 告知用户当前为后端安全调用 */}
+      <div className="max-w-2xl mx-auto px-4 mb-4">
+        <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-emerald-500/60 font-bold bg-emerald-500/5 py-1 px-3 rounded-full border border-emerald-500/10 w-fit mx-auto">
+          <ShieldCheck className="w-3 h-3" /> 
+          Server-Side Protected Mode
+        </div>
+      </div>
+
       <main className="pb-20">
         <InputSection onGenerate={handleGenerate} status={status} />
         
@@ -59,17 +68,6 @@ const App: React.FC = () => {
                   <p className="text-sm text-red-300/80 mt-2 leading-relaxed">{error.details}</p>
                 </div>
               </div>
-              
-              {error.details?.includes("CORS") && (
-                <div className="mt-2 pt-4 border-t border-red-500/20 text-xs text-red-300/60">
-                  <p className="mb-2">💡 提示：阿里 API 不允许从浏览器直接访问（跨域限制）。</p>
-                  <p>建议：</p>
-                  <ul className="list-disc ml-4 space-y-1 mt-1">
-                    <li>切换回 <b>Gemini Pro</b> 模型（已配置好后端转发，支持直接使用）。</li>
-                    <li>如果您是开发者，请考虑使用中转服务器。</li>
-                  </ul>
-                </div>
-              )}
             </div>
           </div>
         )}
