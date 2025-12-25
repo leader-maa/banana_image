@@ -2,79 +2,90 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from "@google/genai";
 
-// 阿里 API 配置 (仅存在于后端，不会泄露给前端)
 const ALIBABA_API_KEY = "sk-c21002c153204a19bdd9759ef619bf97";
-const ALIBABA_ENDPOINT = "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation";
+// 万相提交接口
+const WANX_SUBMIT_ENDPOINT = "https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation";
+// 任务查询接口前缀
+const TASK_QUERY_ENDPOINT = "https://dashscope.aliyuncs.com/api/v1/tasks/";
 
-/**
- * 提取并清洗字符串中的 SVG 内容
- */
-const cleanSvgOutput = (text: string): string => {
+const extractSvg = (text: string): string => {
   if (!text) return "";
-  const svgMatch = text.match(/<svg[\s\S]*?<\/svg>/i);
-  if (svgMatch && svgMatch[0]) {
-    return svgMatch[0];
-  }
-  return text.replace(/```(xml|svg)?/gi, '').replace(/```/g, '').trim();
+  const svgRegex = /<svg[\s\S]*?<\/svg>/i;
+  const match = text.match(svgRegex);
+  return match ? match[0].trim() : "";
 };
 
 export async function POST(req: NextRequest) {
   try {
     const { prompt, modelId } = await req.json();
 
-    const systemInstruction = `
-      You are a world-class expert in Scalable Vector Graphics (SVG) design. 
-      Return ONLY raw SVG code for: "${prompt}".
-      Rules: self-contained, viewBox included, gradients used, no markdown backticks.
-    `;
-
-    // 1. 阿里通义千问逻辑 (服务端调用)
-    if (modelId === 'qwen-plus') {
-      const response = await fetch(ALIBABA_ENDPOINT, {
+    // --- 1. 阿里万相文生图逻辑 ---
+    if (modelId === 'wanx-v1') {
+      console.log("[Backend] Submitting Wanx-V1 Job...");
+      const submitResponse = await fetch(WANX_SUBMIT_ENDPOINT, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${ALIBABA_API_KEY}`,
           "Content-Type": "application/json",
+          "X-DashScope-Async": "enable" // 启用异步
         },
         body: JSON.stringify({
-          model: "qwen-plus",
-          input: {
-            messages: [
-              { role: "system", content: systemInstruction },
-              { role: "user", content: `Generate SVG for: ${prompt}` }
-            ]
-          },
-          parameters: { result_format: "message" }
+          model: "wanx-v1",
+          input: { prompt: prompt },
+          parameters: { style: "<auto>", size: "1024*1024", n: 1 }
         })
       });
 
-      if (!response.ok) {
-        const err = await response.json();
-        return NextResponse.json({ error: err.message || "Alibaba API Error" }, { status: response.status });
+      const submitData = await submitResponse.json();
+      if (!submitResponse.ok || !submitData.output?.task_id) {
+        throw new Error(submitData.message || "阿里任务提交失败");
       }
 
-      const data = await response.json();
-      const content = data.output.choices[0].message.content || '';
-      return NextResponse.json({ svg: cleanSvgOutput(content) });
-    } 
+      const taskId = submitData.output.task_id;
+      let imageUrl = "";
+      
+      // 轮询任务状态 (简单实现，最多尝试 15 次，每次间隔 3s)
+      for (let i = 0; i < 15; i++) {
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        console.log(`[Backend] Polling task ${taskId} (Attempt ${i+1})...`);
+        
+        const queryRes = await fetch(`${TASK_QUERY_ENDPOINT}${taskId}`, {
+          headers: { "Authorization": `Bearer ${ALIBABA_API_KEY}` }
+        });
+        const queryData = await queryRes.json();
+        
+        if (queryData.output.task_status === 'SUCCEEDED') {
+          imageUrl = queryData.output.results[0].url;
+          break;
+        } else if (queryData.output.task_status === 'FAILED') {
+          throw new Error("阿里图片生成任务失败: " + queryData.output.message);
+        }
+      }
 
-    // 2. Google Gemini 逻辑 (服务端调用)
+      if (!imageUrl) throw new Error("图片生成超时，请稍后重试。");
+      return NextResponse.json({ content: imageUrl, type: 'image' });
+    }
+
+    // --- 2. Gemini 生成 SVG 逻辑 ---
     else {
+      console.log("[Backend] Calling Gemini for SVG...");
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const response = await ai.models.generateContent({
-        model: modelId,
+      const result = await ai.models.generateContent({
+        model: 'gemini-3-pro-preview',
         contents: prompt,
         config: {
-          systemInstruction: systemInstruction,
+          systemInstruction: "You are a professional SVG artist. Output ONLY the valid SVG code for the user request. No text, no markdown. Use attractive colors and clean paths.",
           temperature: 0.7,
         },
       });
 
-      return NextResponse.json({ svg: cleanSvgOutput(response.text || "") });
+      const svg = extractSvg(result.text || "");
+      if (!svg) throw new Error("模型未能生成有效的矢量图代码。");
+      return NextResponse.json({ content: svg, type: 'svg' });
     }
 
   } catch (error: any) {
-    console.error("Backend Error:", error);
-    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
+    console.error("[Backend Error]", error);
+    return NextResponse.json({ error: error.message || "生成过程出错" }, { status: 500 });
   }
 }

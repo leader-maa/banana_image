@@ -4,81 +4,101 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 
-import React, { useEffect, useRef } from 'react';
-import { Download, CheckCircle2, Code } from 'lucide-react';
-import { GeneratedSvg } from '../types';
+import React, { useState, useEffect } from 'react';
+import { Download, CheckCircle2, Code, ImageIcon } from 'lucide-react';
+import { GeneratedAsset } from '../types';
 
 interface SvgPreviewProps {
-  data: GeneratedSvg | null;
+  data: GeneratedAsset | null;
 }
 
 export const SvgPreview: React.FC<SvgPreviewProps> = ({ data }) => {
-  const [copied, setCopied] = React.useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [copied, setCopied] = useState(false);
 
-  // Reset copied state when data changes
   useEffect(() => {
     setCopied(false);
   }, [data]);
 
   if (!data) return null;
 
+  const isSvg = data.type === 'svg';
+
   const handleDownload = () => {
-    const blob = new Blob([data.content], { type: 'image/svg+xml' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `vectorcraft-${data.id}.svg`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    if (isSvg) {
+      const blob = new Blob([data.content], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `vector-${data.id}.svg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } else {
+      // 图片直接跳转新窗口下载
+      window.open(data.content, '_blank');
+    }
   };
 
   const handleCopyCode = () => {
-    navigator.clipboard.writeText(data.content);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (isSvg) {
+      navigator.clipboard.writeText(data.content);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto mt-12 px-4 animate-in fade-in slide-in-from-bottom-8 duration-700">
+    <div className="w-full max-w-4xl mx-auto mt-12 px-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="bg-zinc-900/80 backdrop-blur border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
-        {/* Toolbar */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-zinc-900/50">
-          <h3 className="text-sm font-medium text-zinc-300 truncate max-w-[150px] sm:max-w-xs">
-            生成结果: <span className="text-zinc-500">"{data.prompt}"</span>
-          </h3>
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-400 uppercase">
+              {data.type}
+            </span>
+            <h3 className="text-sm font-medium text-zinc-300 truncate max-w-[200px]">
+              {data.prompt}
+            </h3>
+          </div>
           <div className="flex gap-2">
-            <button
-              onClick={handleCopyCode}
-              className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors group relative"
-              title="复制 SVG 代码"
-            >
-              {copied ? <CheckCircle2 className="w-5 h-5 text-green-400" /> : <Code className="w-5 h-5" />}
-            </button>
+            {isSvg && (
+              <button
+                onClick={handleCopyCode}
+                className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+              >
+                {copied ? <CheckCircle2 className="w-5 h-5 text-green-400" /> : <Code className="w-5 h-5" />}
+              </button>
+            )}
             <button
               onClick={handleDownload}
               className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-900 bg-white rounded-lg hover:bg-zinc-200 transition-colors"
             >
               <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">下载 SVG</span>
+              <span>下载文件</span>
             </button>
           </div>
         </div>
 
-        {/* Canvas Area */}
-        <div className="p-8 flex items-center justify-center bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-zinc-950/50 min-h-[400px]">
-          <div 
-            ref={containerRef}
-            className="w-full max-w-[512px] h-auto transition-all duration-500 transform hover:scale-[1.02] filter drop-shadow-2xl"
-            dangerouslySetInnerHTML={{ __html: data.content }} 
-          />
+        <div className="p-8 flex items-center justify-center bg-zinc-950/50 min-h-[400px] relative">
+          {isSvg ? (
+            <div 
+              className="w-full max-w-[500px] h-auto flex items-center justify-center"
+              dangerouslySetInnerHTML={{ 
+                __html: data.content.includes('<svg') ? data.content : `<p class="text-red-500">无效的 SVG 代码</p>` 
+              }} 
+            />
+          ) : (
+            <img 
+              src={data.content} 
+              alt={data.prompt}
+              className="max-w-full max-h-[600px] rounded-lg shadow-2xl object-contain animate-in zoom-in-95 duration-500"
+            />
+          )}
         </div>
         
-        {/* Metadata Footer */}
-        <div className="px-4 py-2 bg-zinc-950 border-t border-white/5 flex justify-between text-xs text-zinc-600">
-          <span>由 Gemini 3 Pro 生成</span>
+        <div className="px-4 py-2 bg-zinc-950 border-t border-white/5 flex justify-between text-[10px] text-zinc-600 uppercase tracking-widest">
+          <span>AI 生成资产</span>
+          <span>{data.modelId}</span>
         </div>
       </div>
     </div>
