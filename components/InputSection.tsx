@@ -1,3 +1,4 @@
+
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -28,10 +29,10 @@ export const InputSection: React.FC<InputSectionProps> = ({ onGenerate, status }
     <div className="w-full max-w-2xl mx-auto mt-12 px-4">
       <div className="text-center mb-8">
         <h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-400 mb-3">
-          What do you want to create?
+          你想创造什么？
         </h2>
         <p className="text-zinc-400 text-lg">
-          Describe an object, icon, or scene, and we'll render it as vector art.
+          描述一个物体、图标或场景，我们将为您渲染矢量艺术。
         </p>
       </div>
 
@@ -45,7 +46,7 @@ export const InputSection: React.FC<InputSectionProps> = ({ onGenerate, status }
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="e.g. A futuristic cyberpunk helmet with neon lights..."
+            placeholder="例如：一个带霓虹灯的未来派赛博朋克头盔..."
             className="flex-1 bg-transparent border-none outline-none text-white placeholder-zinc-500 px-4 py-3 text-lg"
             disabled={isLoading}
           />
@@ -62,11 +63,11 @@ export const InputSection: React.FC<InputSectionProps> = ({ onGenerate, status }
             {isLoading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                <span className="hidden sm:inline">Crafting...</span>
+                <span className="hidden sm:inline">创作中...</span>
               </>
             ) : (
               <>
-                <span className="hidden sm:inline">Generate</span>
+                <span className="hidden sm:inline">立即生成</span>
                 <Send className="w-5 h-5" />
               </>
             )}
@@ -76,7 +77,7 @@ export const InputSection: React.FC<InputSectionProps> = ({ onGenerate, status }
       
       {/* Quick suggestions */}
       <div className="mt-6 flex flex-wrap justify-center gap-2">
-        {['Retro Camera', 'Space Rocket', 'Origami Bird', 'Isometric House'].map((suggestion) => (
+        {['复古照相机', '航天火箭', '折纸艺术鸟', '等距视角小房子'].map((suggestion) => (
           <button
             key={suggestion}
             onClick={() => setInput(suggestion)}

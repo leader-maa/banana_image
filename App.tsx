@@ -1,3 +1,4 @@
+
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -35,8 +36,8 @@ const App: React.FC = () => {
     } catch (err: any) {
       setStatus(GenerationStatus.ERROR);
       setError({
-        message: "Generation Failed",
-        details: err.message || "An unexpected error occurred while contacting Gemini."
+        message: "生成失败",
+        details: err.message || "连接 Gemini API 时发生意外错误。"
       });
     }
   };
@@ -74,7 +75,7 @@ const App: React.FC = () => {
                    <polyline points="21 15 16 10 5 21" />
                 </svg>
              </div>
-             <p className="text-zinc-600 text-sm">Generated artwork will appear here</p>
+             <p className="text-zinc-600 text-sm">生成的艺术作品将在这里显示</p>
           </div>
         )}
       </main>

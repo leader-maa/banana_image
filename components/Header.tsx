@@ -1,3 +1,4 @@
+
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -15,9 +16,9 @@ export const Header: React.FC = () => {
             <PenTool className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white tracking-tight">VectorCraft AI</h1>
+            <h1 className="text-xl font-bold text-white tracking-tight">矢量工坊 AI</h1>
             <p className="text-xs text-zinc-400 font-medium flex items-center gap-1">
-              Powered by Gemini 3 Pro <Sparkles className="w-3 h-3 text-amber-400" />
+              由 Gemini 3 Pro 驱动 <Sparkles className="w-3 h-3 text-amber-400" />
             </p>
           </div>
         </div>
@@ -27,7 +28,7 @@ export const Header: React.FC = () => {
           rel="noopener noreferrer"
           className="hidden sm:block text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
         >
-          Documentation
+          官方文档
         </a>
       </div>
     </header>

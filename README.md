@@ -1,88 +1,88 @@
-# 🎨 VectorCraft AI
+# 🎨 矢量工坊 (VectorCraft AI)
 
-> Transform your imagination into high-quality, scalable vector graphics using the power of Gemini 3 Pro.
+> 借助 Gemini 3 Pro 的强大功能，将您的想象力转化为高质量、可缩放的矢量图形。
 
 [![React](https://img.shields.io/badge/React-20232a?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![Gemini API](https://img.shields.io/badge/Gemini_3_Pro-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-VectorCraft AI is a sophisticated web application that leverages Google's **Gemini 3 Pro** model to generate production-ready SVG assets from natural language prompts. Whether you need a futuristic icon, a minimalist logo, or a complex vector scene, VectorCraft AI handles the pathing and gradients for you.
+**矢量工坊 (VectorCraft AI)** 是一款基于 Google **Gemini 3 Pro** 模型构建的高级 Web 应用程序，能够根据自然语言提示词生成可直接用于生产环境的 SVG 资产。无论您需要未来感十足的图标、极简主义的 Logo，还是复杂的矢量场景，矢量工坊都能为您处理好路径和渐变。
 
 ---
 
-## ✨ Key Features
+## ✨ 核心功能
 
-- 🚀 **AI-Powered Generation**: Instantly create SVGs from simple or complex text descriptions.
-- 🎨 **Visual Preview**: Real-time rendering of generated vectors on a sleek, textured canvas.
-- 💻 **Code Extraction**: One-click copying of raw SVG code for immediate use in your projects.
-- 📥 **Instant Download**: Save your creations directly as `.svg` files.
-- 🌙 **Modern Dark UI**: A high-performance, responsive interface built with Tailwind CSS and Lucide icons.
-- ⚡ **Optimized Performance**: Lightweight architecture using ES6 modules and modern React patterns.
-
----
-
-## 🛠️ Tech Stack
-
-- **Framework**: [React 19+](https://react.dev/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **Intelligence**: [@google/genai](https://www.npmjs.com/package/@google/genai) (Gemini 3 Pro Preview)
-- **Icons**: [Lucide React](https://lucide.dev/)
-- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- 🚀 **AI 驱动生成**：通过简单的文字描述，瞬间创作 SVG 矢量图。
+- 🎨 **实时预览**：在极具质感的画布上实时渲染生成的矢量图。
+- 💻 **代码提取**：一键复制原始 SVG 代码，直接在您的项目中使用。
+- 📥 **即时下载**：直接将您的作品保存为 `.svg` 文件。
+- 🌙 **现代暗黑 UI**：使用 Tailwind CSS 和 Lucide 图标构建的高性能、响应式界面。
+- ⚡ **性能优化**：采用 React 19 和现代前端开发模式，轻量且高效。
 
 ---
 
-## 🚀 Getting Started
+## 🛠️ 技术栈
 
-### Prerequisites
+- **框架**: [React 19+](https://react.dev/)
+- **样式**: [Tailwind CSS](https://tailwindcss.com/)
+- **大模型**: [@google/genai](https://www.npmjs.com/package/@google/genai) (Gemini 3 Pro Preview)
+- **图标**: [Lucide React](https://lucide.dev/)
+- **语言**: [TypeScript](https://www.typescriptlang.org/)
 
-To run this application, you will need a Google Gemini API Key. You can obtain one for free at the [Google AI Studio](https://aistudio.google.com/).
+---
 
-### Installation
+## 🚀 快速上手
 
-1. **Clone the repository**
+### 环境准备
+
+运行此项目前，您需要一个 Google Gemini API 密钥。您可以在 [Google AI Studio](https://aistudio.google.com/) 免费获取。
+
+### 安装步骤
+
+1. **克隆仓库**
    ```bash
    git clone https://github.com/your-username/vector-craft-ai.git
    cd vector-craft-ai
    ```
 
-2. **Environment Configuration**
-   The application requires an environment variable named `API_KEY` to interact with the Gemini API.
+2. **环境变量配置**
+   应用程序需要名为 `API_KEY` 的环境变量来与 Gemini API 进行交互。
    
-   - In a local development environment, ensure `process.env.API_KEY` is accessible.
-   - For cloud platforms (like Vercel or Netlify), add `API_KEY` to your environment secrets.
+   - 在本地开发环境中，请确保 `process.env.API_KEY` 可被访问。
+   - 在部署平台（如 Vercel 或 Netlify）上，请在环境变量设置中添加 `API_KEY`。
 
-3. **Running the App**
-   This project is structured as a standard ES module-based frontend application. You can serve it using any local dev server like `vite` or `live-server`.
-
----
-
-## 📖 How It Works
-
-1. **System Prompting**: We provide Gemini with a specialized system instruction that enforces strict SVG syntax, encourages the use of gradients/shadows, and forbids conversational filler.
-2. **Generation**: The `gemini-3-pro-preview` model processes your prompt and generates the corresponding XML/SVG code.
-3. **Rendering**: The application cleans the output and injects the SVG into the DOM safely, allowing for real-time manipulation and inspection.
+3. **运行应用**
+   本项目采用标准的 ES 模块结构。您可以使用任何本地开发服务器（如 `vite` 或 `live-server`）来启动项目。
 
 ---
 
-## 🤝 Contributing
+## 📖 工作原理
 
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+1. **系统提示词优化**：我们为 Gemini 提供了一套专业的系统指令，强制执行严格的 SVG 语法，鼓励使用渐变和阴影，并禁止生成废话。
+2. **AI 生成**：`gemini-3-pro-preview` 模型处理您的提示词，并生成相应的 XML/SVG 代码。
+3. **渲染与清洗**：应用程序会对输出进行清洗，并安全地注入 DOM，实现实时预览和检查。
 
 ---
 
-## 📄 License
+## 🤝 贡献指南
 
-Distributed under the Apache-2.0 License. See `LICENSE` for more information.
+我们非常欢迎并感谢任何形式的贡献！
+
+1. Fork 本项目
+2. 创建您的特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交您的修改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启一个 Pull Request
+
+---
+
+## 📄 开源协议
+
+本项目采用 Apache-2.0 协议。详情请参阅 `LICENSE` 文件。
 
 ---
 
 <p align="center">
-  Built with ❤️ using Gemini & React
+  由 Gemini & React 精心打造 ❤️
 </p>
