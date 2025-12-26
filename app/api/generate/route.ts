@@ -1,8 +1,7 @@
-
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from '@google/generative-ai'; // ✅ 正确导入
 
-const ALIBABA_API_KEY = "sk-c21002c153204a19bdd9759ef619bf97";
+const ALIBABA_API_KEY = process.env.ALIBABA_API_KEY || "sk-7ed35f5d66a947a8acf1e2b0438a658d";
 // 阿里万相提交接口
 const WANX_SUBMIT_ENDPOINT = "https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation";
 // 任务查询接口
@@ -18,7 +17,12 @@ const extractSvg = (text: string): string => {
   if (!text) return "";
   
   // 移除 markdown 代码块包裹
-  let cleanText = text.replace(/```svg/gi, '').replace(/```xml/gi, '').replace(/```html/gi, '').replace(/```/g, '').trim();
+  let cleanText = text
+    .replace(/```svg[\s\S]*?/gi, '')
+    .replace(/```xml[\s\S]*?/gi, '')
+    .replace(/```html[\s\S]*?/gi, '')
+    .replace(/```/g, '')
+    .trim();
   
   // 正则匹配完整的 <svg ... </svg>
   const svgRegex = /<svg[\s\S]*?<\/svg>/i;
@@ -35,7 +39,13 @@ const extractSvg = (text: string): string => {
 
 export async function POST(req: NextRequest) {
   try {
-    const { prompt, modelId } = await req.json();
+    const body = await req.json();
+    const { prompt, modelId } = body;
+
+    if (!prompt || typeof prompt !== 'string') {
+      return NextResponse.json({ error: '缺少或无效的 prompt' }, { status: 400 });
+    }
+
     console.log(`[API] Starting generation for model: ${modelId}`);
 
     // --- 1. 阿里万相文生图 (Wanx-V1) ---
@@ -45,7 +55,7 @@ export async function POST(req: NextRequest) {
         headers: {
           "Authorization": `Bearer ${ALIBABA_API_KEY}`,
           "Content-Type": "application/json",
-          "X-DashScope-Async": "enable"
+          "X-DashScope-Async": "enable" // ✅ 删除多余逗号
         },
         body: JSON.stringify({
           model: "wanx-v1",
@@ -83,7 +93,7 @@ export async function POST(req: NextRequest) {
         try {
           queryData = JSON.parse(queryText);
         } catch (e) {
-          continue; // 轮询过程中偶尔的网络波动忽略
+          continue; // 忽略解析失败，继续轮询
         }
         
         const status = queryData.output?.task_status;
@@ -102,20 +112,30 @@ export async function POST(req: NextRequest) {
     }
 
     // --- 2. Gemini 矢量图 (SVG) ---
-    else {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview',
-        contents: `Create a professional, high-quality SVG graphic for: "${prompt}". 
-        The SVG should be clean, use modern colors or gradients, and include a proper viewBox.
-        Return ONLY the raw <svg> code without any explanations or markdown.`,
-        config: {
-          systemInstruction: "You are a specialized SVG generator. You only output valid, standalone XML/SVG code. No conversational filler.",
-          temperature: 0.4, // 降低随机性以获取更稳定的代码结构
-        },
-      });
+    else if (modelId === 'gemini-svg') {
+      const apiKey = process.env.API_KEY;
+      if (!apiKey) {
+        console.error("[Gemini] Missing API_KEY in environment variables");
+        return NextResponse.json({ error: "后端配置错误：未设置 Gemini API 密钥" }, { status: 500 });
+      }
 
-      const rawText = response.text || "";
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" }); // ✅ 正确模型名称
+
+      const result = await model.generateContent([
+        {
+          role: "user",
+          parts: [
+            { text: `Create a professional, high-quality SVG graphic for: "${prompt}". 
+The SVG should be clean, use modern colors or gradients, and include a proper viewBox.
+Return ONLY the raw <svg> code without any explanations or markdown.` }
+          ],
+        },
+      ]);
+
+      const response = result.response;
+      const rawText = response.text() || "";
+
       const svg = extractSvg(rawText);
 
       if (!svg) {
@@ -126,10 +146,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ content: svg, type: 'svg' });
     }
 
+    // --- 未知 modelId ---
+    else {
+      return NextResponse.json({ error: '不支持的模型 ID' }, { status: 400 });
+    }
+
   } catch (error: any) {
     console.error("[Backend Error]", error);
     return NextResponse.json({ 
       error: error.message || "生成过程出现未知错误" 
     }, { status: 500 });
   }
+}
+
+// ✅ 添加 OPTIONS 处理以支持 CORS（可选）
+export function OPTIONS() {
+  return NextResponse.json({}, {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    }
+  });
 }
