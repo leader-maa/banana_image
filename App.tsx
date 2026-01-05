@@ -55,7 +55,7 @@ const App: React.FC = () => {
     try {
       const response: any = await generateSvgViaApi(prompt, modelId);
       
-      // 增加人为等待，让用户感受到“计算感”
+      
       setTimeout(() => {
         const newAsset: GeneratedAsset = {
           id: crypto.randomUUID(),
